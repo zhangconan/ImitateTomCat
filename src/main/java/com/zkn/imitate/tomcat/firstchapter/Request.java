@@ -1,5 +1,6 @@
 package com.zkn.imitate.tomcat.firstchapter;
 
+import com.zkn.imitate.tomcat.utils.StringUtil;
 import jdk.internal.util.xml.impl.Input;
 
 import java.io.*;
@@ -29,20 +30,35 @@ public class Request {
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
         String str = null;
         try {
+            StringBuffer sb = new StringBuffer(1024);
             while ((str = br.readLine()) != null) {
-                System.out.println(str);
                 if("".equals(str))
                     break;
+                sb.append(str).append("\n");
             }
+            br = null;
+            String strHeader = sb.toString();
+            System.out.println(strHeader);
+            uri = parserUri(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (br != null)
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
         }
+    }
+
+    private String parserUri(String str) {
+        if(StringUtil.isEmpty(str))
+            return "";
+        int indexFirst = str.indexOf(" ");
+        if(indexFirst != -1){//说明查找到了
+            int indexSecond = str.indexOf(" ",indexFirst+1);
+            if(indexSecond > indexFirst)
+               return str.substring(indexFirst+1,indexSecond);
+        }
+        return "";
+    }
+
+    public String getUri(){
+
+        return uri;
     }
 }
