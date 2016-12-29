@@ -1,5 +1,7 @@
 package com.zkn.imitate.tomcat.firstchapter;
 
+import com.zkn.imitate.tomcat.utils.Constants;
+
 import java.io.*;
 
 /**
@@ -21,7 +23,7 @@ public class Response {
     public void writeResponse(String filePath) {
         FileInputStream fis = null;
         try {
-            File file = new File(HttpServer.WEB_PATH,filePath);
+            File file = new File(Constants.WEB_PATH,filePath);
             //如果文件存在的话
             if (file.exists() && !file.isDirectory()) {
                 if(file.canRead()){
