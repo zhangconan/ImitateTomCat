@@ -2,3 +2,7 @@ output
 .idea
 target/
 *.iml
+/.idea/
+/target/
+/ImitateTomCat.iml
+/com.zkn.ImitateTomCat.iml

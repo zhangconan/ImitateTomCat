@@ -22,7 +22,6 @@ public class FileSystemClassLoader extends ClassLoader{
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
         byte[] bytes = getByteData(name);
-        System.out.println(Arrays.toString(bytes));
         return defineClass(null,bytes,0,bytes.length);
     }
 
@@ -39,7 +38,8 @@ public class FileSystemClassLoader extends ClassLoader{
                 /**
                  * 这里需要注意：写入的时候，写入的范围一定是0，flag。
                  * 原因是：有可能读取的bytes不够1024个字节，这个时候如果不写入读取范围的话，
-                 *       则会把bytes。在defineClass的时候会出现异常。
+                 *       则会把bytes中存留的上次读取的数据也写入到ByteArrayOutputStream中。
+                 *       这样在defineClass的时候会出现异常。
                  *       异常信息如下：
                  *Exception in thread "main" java.lang.ClassFormatError:
                  *      Extra bytes at the end of class file FirstServlet
