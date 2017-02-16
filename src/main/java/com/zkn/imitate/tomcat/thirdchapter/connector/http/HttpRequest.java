@@ -1,6 +1,9 @@
 package com.zkn.imitate.tomcat.thirdchapter.connector.http;
 
 
+import com.zkn.imitate.tomcat.utils.ParameterMap;
+import com.zkn.imitate.tomcat.utils.RequestUtil;
+
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.BufferedReader;
@@ -15,7 +18,7 @@ import java.util.Map;
 /**
  * Created by wb-zhangkenan on 2017/2/16.
  */
-public class HttpRequest implements HttpServletRequest{
+public class HttpRequest implements HttpServletRequest {
 
     private SocketInputStream inputStream;
     /**
@@ -54,6 +57,14 @@ public class HttpRequest implements HttpServletRequest{
      * 是否有Cookie
      */
     private boolean requestedSessionCookie;
+    /**
+     * 用来标识是否解析过了
+     */
+    protected boolean parsed = false;
+    /**
+     * 存放参数信息
+     */
+    protected ParameterMap parameters = null;
 
     public HttpRequest(SocketInputStream input) {
         this.inputStream = input;
@@ -376,5 +387,64 @@ public class HttpRequest implements HttpServletRequest{
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    protected void parseParameters() {
+        if (parsed)
+            return;
+        ParameterMap results = parameters;
+        if (results == null)
+            results = new ParameterMap();
+        results.setLocked(false);
+        String encoding = getCharacterEncoding();
+        if (encoding == null)
+            encoding = "ISO-8859-1";
+
+        // Parse any parameters specified in the query string
+        String queryString = getQueryString();
+        try {
+            RequestUtil.parseParameters(results, queryString, encoding);
+        } catch (UnsupportedEncodingException e) {
+            ;
+        }
+        // Parse any parameters specified in the input stream
+        String contentType = getContentType();
+        if (contentType == null)
+            contentType = "";
+        int semicolon = contentType.indexOf(';');
+        if (semicolon >= 0) {
+            contentType = contentType.substring(0, semicolon).trim();
+        } else {
+            contentType = contentType.trim();
+        }
+        if ("POST".equals(getMethod()) && (getContentLength() > 0)
+                && "application/x-www-form-urlencoded".equals(contentType)) {
+            try {
+                int max = getContentLength();
+                int len = 0;
+                byte buf[] = new byte[getContentLength()];
+                ServletInputStream is = getInputStream();
+                while (len < max) {
+                    int next = is.read(buf, len, max - len);
+                    if (next < 0) {
+                        break;
+                    }
+                    len += next;
+                }
+                is.close();
+                if (len < max) {
+                    throw new RuntimeException("Content length mismatch");
+                }
+                RequestUtil.parseParameters(results, buf, encoding);
+            } catch (UnsupportedEncodingException ue) {
+                ;
+            } catch (IOException e) {
+                throw new RuntimeException("Content read fail");
+            }
+        }
+        // Store the final results
+        results.setLocked(true);
+        parsed = true;
+        parameters = results;
     }
 }

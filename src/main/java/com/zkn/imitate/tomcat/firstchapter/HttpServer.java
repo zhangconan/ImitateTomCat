@@ -15,6 +15,7 @@ public class HttpServer {
 
     public static void main(String[] args){
         await();
+        //System.out.println(System.getProperty("user.dir"));
     }
 
     private static void await() {

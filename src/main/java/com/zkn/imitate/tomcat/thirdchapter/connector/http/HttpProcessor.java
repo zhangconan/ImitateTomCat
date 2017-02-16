@@ -8,6 +8,7 @@ import com.zkn.imitate.tomcat.utils.RequestUtil;
 import com.zkn.imitate.tomcat.utils.StringManager;
 
 import javax.servlet.http.Cookie;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
@@ -110,7 +111,7 @@ public class HttpProcessor {
         }
     }
 
-    private void parseRequest(SocketInputStream input, OutputStream output) throws ServletException {
+    private void parseRequest(SocketInputStream input, OutputStream output) throws ServletException, IOException {
         //解析请求行
         input.readRequestLine(httpRequestLine);
         //请求行的方法

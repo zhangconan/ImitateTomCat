@@ -36,6 +36,7 @@ public class Request implements ServletRequest {
                     break;
                 sb.append(str).append("\n");
             }
+            System.out.println(sb.toString());
             uri = StringUtil.parserUri(sb.toString()," ");
         } catch (IOException e) {
             e.printStackTrace();

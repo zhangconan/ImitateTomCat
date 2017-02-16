@@ -23,7 +23,7 @@ public class ServletProcessor {
      * @param response
      */
     public void process(Request request, Response response){
-
+        //URI信息
         String str = request.getUri();
         String servletName = null;
         if(!StringUtil.isEmpty(str) && str.lastIndexOf("/") >= 0){
@@ -36,11 +36,12 @@ public class ServletProcessor {
         File classPath = new File(Constants.WEB_ROOT);
 
         try {
-            //创建URL
+            //创建仓库位置
             String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
             url[0] = new URL(null,repository,streamHandler);
+            //URL类加载器
             classLoader = new URLClassLoader(url);
-
+            //加载类
             Class clazz = classLoader.loadClass(servletName);
             Servlet servlet = (Servlet) clazz.newInstance();
             servlet.service(request,response);

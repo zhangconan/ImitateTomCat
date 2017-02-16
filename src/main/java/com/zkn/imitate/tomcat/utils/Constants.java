@@ -18,4 +18,8 @@ public class Constants {
      *  根目录
      */
     public static String WEB_ROOT = System.getProperty("user.dir")+ File.separator+"webroot";
+    /**
+     * 包名
+     */
+    public static final String Package = "com.zkn.imitate.tomcat.thirdchapter.connector.http";
 }
