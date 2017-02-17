@@ -7,7 +7,7 @@ public class StringManager {
 
 
     public static StringManager getManager(String s) {
-        return null;
+        return new StringManager();
     }
 
     public String getString(String s) {

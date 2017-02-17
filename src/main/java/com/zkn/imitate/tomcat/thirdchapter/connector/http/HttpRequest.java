@@ -1,6 +1,7 @@
 package com.zkn.imitate.tomcat.thirdchapter.connector.http;
 
 
+import com.zkn.imitate.tomcat.utils.Enumerator;
 import com.zkn.imitate.tomcat.utils.ParameterMap;
 import com.zkn.imitate.tomcat.utils.RequestUtil;
 
@@ -10,10 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by wb-zhangkenan on 2017/2/16.
@@ -66,6 +64,8 @@ public class HttpRequest implements HttpServletRequest {
      */
     protected ParameterMap parameters = null;
 
+    protected HashMap headers = new HashMap();
+
     public HttpRequest(SocketInputStream input) {
         this.inputStream = input;
     }
@@ -92,7 +92,10 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public Enumeration<String> getHeaderNames() {
-        return null;
+
+         synchronized (headers) {
+            return (new Enumerator(headers.keySet()));
+        }
     }
 
     public int getIntHeader(String name) {
@@ -100,7 +103,7 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public String getMethod() {
-        return null;
+        return method;
     }
 
     public String getPathInfo() {
@@ -116,7 +119,7 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public String getQueryString() {
-        return null;
+        return queryString;
     }
 
     public String getRemoteUser() {
@@ -216,7 +219,7 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public int getContentLength() {
-        return 0;
+        return contentLength;
     }
 
     public long getContentLengthLong() {
@@ -224,7 +227,7 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public String getContentType() {
-        return null;
+        return contentType;
     }
 
     public ServletInputStream getInputStream() throws IOException {
@@ -236,7 +239,8 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public Enumeration<String> getParameterNames() {
-        return null;
+        parseParameters();
+        return new Enumerator(parameters.keySet());
     }
 
     public String[] getParameterValues(String name) {
@@ -372,6 +376,15 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public void addHeader(String name, String value) {
+        name = name.toLowerCase();
+        synchronized (headers) {
+            ArrayList values = (ArrayList) headers.get(name);
+            if (values == null) {
+                values = new ArrayList();
+                headers.put(name, values);
+            }
+            values.add(value);
+        }
     }
 
     public void setRequestedSessionCookie(boolean requestedSessionCookie) {
@@ -390,22 +403,26 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     protected void parseParameters() {
+        //参数只能被解析一次，如果已经解析过参数之后就不用再解析了、
         if (parsed)
             return;
         ParameterMap results = parameters;
         if (results == null)
             results = new ParameterMap();
+        //设置解析参数的过程中不能修改参数值的
         results.setLocked(false);
+        //字符集
         String encoding = getCharacterEncoding();
+        //如果没有设置字符集默认为ISO-8859-1 TomCat的默认字符集为ISO-8859-1
         if (encoding == null)
             encoding = "ISO-8859-1";
-
         // Parse any parameters specified in the query string
+        //解析URI中的请求参数
         String queryString = getQueryString();
         try {
             RequestUtil.parseParameters(results, queryString, encoding);
         } catch (UnsupportedEncodingException e) {
-            ;
+
         }
         // Parse any parameters specified in the input stream
         String contentType = getContentType();

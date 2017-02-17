@@ -38,13 +38,14 @@ public class HttpConnector implements Runnable{
             try {
                 //创建客户端实例
                 socket = serverSocket.accept();
+                if(socket != null){
+                     HttpProcessor httpProcessor = new HttpProcessor(this);
+                    httpProcessor.process(socket);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 continue;
             }
-            //请求处理
-            HttpProcessor httpProcessor = new HttpProcessor(this);
-            httpProcessor.process(socket);
         }
     }
 

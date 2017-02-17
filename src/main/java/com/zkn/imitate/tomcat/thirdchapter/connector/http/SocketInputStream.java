@@ -12,7 +12,6 @@ import java.io.InputStream;
  */
 public class SocketInputStream extends InputStream {
 
-    private InputStream inputStream;
     /**
      * 行末
      */
@@ -57,15 +56,21 @@ public class SocketInputStream extends InputStream {
 
     protected static StringManager sm =
             StringManager.getManager(Constants.Package);
+
     public int read() throws IOException {
-        return 0;
+        if (pos >= count) {
+            fill();
+            if (pos >= count)
+                return -1;
+        }
+        return buf[pos++] & 0xff;
     }
 
     public SocketInputStream() {
     }
 
     public SocketInputStream(InputStream inputStream, int length) {
-        this.inputStream = inputStream;
+        this.is = inputStream;
         buf = new byte[length];
     }
 
@@ -385,5 +390,32 @@ public class SocketInputStream extends InputStream {
             }
         }
         header.valueEnd = readCount;
+    }
+
+    protected void fill()
+            throws IOException {
+        pos = 0;
+        count = 0;
+        int nRead = is.read(buf, 0, buf.length);
+        if (nRead > 0) {
+            count = nRead;
+        }
+    }
+
+    public int available()
+            throws IOException {
+        return (count - pos) + is.available();
+    }
+
+    /**
+     * Close the input stream.
+     */
+    public void close()
+            throws IOException {
+        if (is == null)
+            return;
+        is.close();
+        is = null;
+        buf = null;
     }
 }

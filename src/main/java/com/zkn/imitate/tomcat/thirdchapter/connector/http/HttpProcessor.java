@@ -65,7 +65,7 @@ public class HttpProcessor {
 
     }
 
-    private void parseHeader(SocketInputStream input) throws ServletException {
+    private void parseHeader(SocketInputStream input) throws ServletException, IOException {
 
         while (true){
             HttpHeader header = new HttpHeader();
@@ -95,7 +95,7 @@ public class HttpProcessor {
                     request.addCookie(cookies[i]);
                 }
             }
-            if (name.equals("content-length")) {
+            if (name.equalsIgnoreCase("content-length")) {
                 int n = -1;
                 try {
                     n = Integer.parseInt(value);
@@ -105,7 +105,7 @@ public class HttpProcessor {
                 }
                 request.setContentLength(n);
             }
-            if (name.equals("content-type")) {
+            if (name.equalsIgnoreCase("content-type")) {
                 request.setContentType(value);
             }
         }
@@ -113,7 +113,9 @@ public class HttpProcessor {
 
     private void parseRequest(SocketInputStream input, OutputStream output) throws ServletException, IOException {
         //解析请求行
+        System.out.println("解析请求行.....");
         input.readRequestLine(httpRequestLine);
+        System.out.println("解析请求行结束.....");
         //请求行的方法
         String method = new String(httpRequestLine.method,0,httpRequestLine.methodEnd);
         //请求行的uri

@@ -1,19 +1,21 @@
 package com.zkn.imitate.tomcat.thirdchapter.connector.http;
 
+import com.zkn.imitate.tomcat.thirdchapter.connector.ResponseStream;
+import com.zkn.imitate.tomcat.thirdchapter.connector.ResponseWriter;
+import com.zkn.imitate.tomcat.utils.Constants;
+
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.Collection;
 import java.util.Locale;
 
 /**
  * Created by wb-zhangkenan on 2017/2/16.
  */
-public class HttpResponse implements HttpServletResponse{
+public class HttpResponse implements HttpServletResponse {
 
     /**
      * 输出流
@@ -23,6 +25,16 @@ public class HttpResponse implements HttpServletResponse{
      * 请求对象
      */
     private HttpRequest request;
+    private static final int BUFFER_SIZE = 1024;
+    private PrintWriter writer;
+    protected byte[] buffer = new byte[BUFFER_SIZE];
+    protected int bufferCount = 0;
+    /**
+     * The actual number of bytes written to this Response.
+     */
+    protected int contentCount = 0;
+
+    protected String encoding = null;
 
     public HttpResponse(OutputStream output) {
         this.outputStream = output;
@@ -117,7 +129,10 @@ public class HttpResponse implements HttpServletResponse{
     }
 
     public String getCharacterEncoding() {
-        return null;
+        if (encoding == null)
+            return ("ISO-8859-1");
+        else
+            return encoding;
     }
 
     public String getContentType() {
@@ -129,7 +144,13 @@ public class HttpResponse implements HttpServletResponse{
     }
 
     public PrintWriter getWriter() throws IOException {
-        return null;
+
+        ResponseStream newStream = new ResponseStream(this);
+        newStream.setCommit(false);
+        OutputStreamWriter osr =
+                new OutputStreamWriter(newStream, getCharacterEncoding());
+        writer = new ResponseWriter(osr);
+        return writer;
     }
 
     public void setCharacterEncoding(String charset) {
@@ -178,5 +199,86 @@ public class HttpResponse implements HttpServletResponse{
 
     public Locale getLocale() {
         return null;
+    }
+
+    public void write(int b) throws IOException {
+        if (bufferCount >= buffer.length)
+            flushBuffer();
+        buffer[bufferCount++] = (byte) b;
+        contentCount++;
+    }
+
+    public void write(byte b[]) throws IOException {
+        write(b, 0, b.length);
+    }
+
+    public void write(byte b[], int off, int len) throws IOException {
+        // If the whole thing fits in the buffer, just put it there
+        if (len == 0)
+            return;
+        if (len <= (buffer.length - bufferCount)) {
+            System.arraycopy(b, off, buffer, bufferCount, len);
+            bufferCount += len;
+            contentCount += len;
+            return;
+        }
+
+        // Flush the buffer and start writing full-buffer-size chunks
+        flushBuffer();
+        int iterations = len / buffer.length;
+        int leftoverStart = iterations * buffer.length;
+        int leftoverLen = len - leftoverStart;
+        for (int i = 0; i < iterations; i++)
+            write(b, off + (i * buffer.length), buffer.length);
+
+        // Write the remainder (guaranteed to fit in the buffer)
+        if (leftoverLen > 0)
+            write(b, off + leftoverStart, leftoverLen);
+    }
+
+    public void finishResponse() {
+        // sendHeaders();
+        // Flush and close the appropriate output mechanism
+        if (writer != null) {
+            writer.flush();
+            writer.close();
+        }
+    }
+
+    public void sendStaticResource() throws IOException {
+        FileInputStream fis = null;
+        try {
+            File file = new File(Constants.WEB_PATH, request.getRequestURI());
+            if (file.exists() && !file.isDirectory()) {
+                if (file.canRead()) {
+                    fis = new FileInputStream(file);
+                    int flag = 0;
+                    byte[] bytes = new byte[1024];
+                    while ((flag = fis.read(bytes)) != -1) {
+                        outputStream.write(bytes);
+                    }
+                }
+            } else {
+                PrintWriter printWriter = getWriter();
+                //这里用PrintWriter字符输出流，设置自动刷新
+                printWriter.write("HTTP/1.1 404 File Not Found \r\n");
+                printWriter.write("Content-Type: text/html\r\n");
+                printWriter.write("Content-Length: 23\r\n");
+                printWriter.write("\r\n");
+                printWriter.write("<h1>File Not Found</h1>");
+                printWriter.close();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fis != null)
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
     }
 }
