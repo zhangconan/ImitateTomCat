@@ -84,7 +84,14 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public String getHeader(String name) {
-        return null;
+        name = name.toLowerCase();
+        synchronized (headers) {
+            ArrayList values = (ArrayList) headers.get(name);
+            if (values != null)
+                return ((String) values.get(0));
+            else
+                return null;
+        }
     }
 
     public Enumeration<String> getHeaders(String name) {
@@ -235,7 +242,12 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public String getParameter(String name) {
-        return null;
+        parseParameters();
+        String values[] = (String[]) parameters.get(name);
+        if (values != null)
+            return (values[0]);
+        else
+            return null;
     }
 
     public Enumeration<String> getParameterNames() {
