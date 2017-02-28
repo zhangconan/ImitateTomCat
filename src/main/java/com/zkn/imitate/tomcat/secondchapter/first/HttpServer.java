@@ -37,10 +37,12 @@ public class HttpServer {
                 String uri = request.getUri();
                 if(uri !=null && uri.startsWith("/favicon.ico")){
 
-                }else if(!StringUtil.isEmpty(uri) && uri.startsWith("/static/")){
+                }
+                if(!StringUtil.isEmpty(uri) && uri.startsWith("/static/")){
                     StaticResourceProcessor resouce = new StaticResourceProcessor();
                     resouce.process(request,response);//处理静态资源
-                }else{
+                }
+                if(!StringUtil.isEmpty(uri) && uri.startsWith("/servlet/")){
                     ServletProcessor servletProcessor = new ServletProcessor();
                     servletProcessor.process(request,response);//处理Servlet
                 }

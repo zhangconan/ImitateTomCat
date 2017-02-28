@@ -16,7 +16,6 @@ public class FirstServlet implements Servlet{
     }
 
     public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
-
         PrintWriter out = servletResponse.getWriter();
         out.println("Hello. Roses are red.");
     }

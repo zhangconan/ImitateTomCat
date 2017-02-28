@@ -44,6 +44,7 @@ public class Response implements ServletResponse {
                 printWriter.write("HTTP/1.1 404 File Not Found \r\n");
                 printWriter.write("Content-Type: text/html\r\n");
                 printWriter.write("Content-Length: 23\r\n");
+                printWriter.write("Set-Cookie: jsessionid="+System.currentTimeMillis()+".leaderus; domain=localhost\r\n");
                 printWriter.write("\r\n");
                 printWriter.write("<h1>File Not Found</h1>");
                 printWriter.close();
