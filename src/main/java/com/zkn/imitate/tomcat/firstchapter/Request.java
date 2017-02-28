@@ -35,7 +35,6 @@ public class Request {
                     break;
                 sb.append(str).append("\n");
             }
-            br = null;
             String strHeader = sb.toString();
             System.out.println(strHeader);
             uri = StringUtil.parserUri(sb.toString()," ");

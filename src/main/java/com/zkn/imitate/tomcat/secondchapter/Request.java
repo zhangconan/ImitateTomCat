@@ -35,6 +35,9 @@ public class Request implements ServletRequest {
                 if("".equals(str))
                     break;
                 sb.append(str).append("\n");
+                if(str.startsWith("Cookie:")){
+                    System.out.println(str);
+                }
             }
             System.out.println(sb.toString());
             uri = StringUtil.parserUri(sb.toString()," ");
